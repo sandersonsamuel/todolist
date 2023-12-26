@@ -1,23 +1,32 @@
 import { useState } from "react";
 import landingLogo from "../assets/notesIMG.svg";
 import { auth } from "../configs/FirebaseConfig";
-import { signInWithEmailAndPassword, updateProfile} from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile} from "firebase/auth";
 
-export function Login() {
+export function CreatAccount() {
   
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState(null)
+  const [email, setEmail] = useState("");
+  const [user, setUser] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
 
   async function sigIn(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-    }catch (error) {
-      setError("Erro ao Logar: " + error.message);
+      await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(auth.currentUser, { displayName: user });
+      console.log("Conta criada com sucesso!");
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        setError("Esse e-mail já está cadastrado");
+
+      }else if(error.code === "auth/weak-password"){
+        setError("A senha deve ter no mínimo 6 caracteres")
+      } else {
+        setError("Erro ao criar conta: " + error.message);
+      }
     }
-    
   }
 
   return (
@@ -31,7 +40,15 @@ export function Login() {
         </div>
         <div className="flex flex-col items-center">
           <form onSubmit={sigIn} className="flex flex-col sm:shadow-custom w-96 h-[35rem] rounded-lg p-9 gap-5">
-            <h1 className="text-3xl text-center font-semibold">Login</h1>
+            <h1 className="text-3xl text-center font-semibold">Criar Conta</h1>
+            <input
+              type="text"
+              className="w-full h-12 outline-none border-2 border-slate-300 rounded-md p-5"
+              placeholder="Usuário"
+              onChange={(e) => setUser(e.target.value)}
+              value={user}
+              required
+            />
 
             <input
               type="email"
@@ -54,7 +71,7 @@ export function Login() {
             <input
               type="submit"
               className="w-full bg-purple-600 h-12 rounded-md text-white cursor-pointer hover:bg-[#8542c4]"
-              value={"Entrar"}
+              value={"Criar Conta"}
             />
 
             {error && <p className="text-center text-red-600">{error}</p>}
@@ -66,7 +83,7 @@ export function Login() {
             </button>
 
             <a href="/Login" className="text-center text-blue-600 cursor-pointer">
-              Não tenho uma conta
+              Já tenho uma conta
             </a>
           </form>
         </div>
